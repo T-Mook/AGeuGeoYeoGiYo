@@ -1,0 +1,9 @@
+**/.venv
+**/.vscode
+**/dist
+**/build
+
+## 실행결과 파일
+*.xlsx
+*.pyc
+*.spec
