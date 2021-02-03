@@ -40,7 +40,7 @@ $ python run.py
 $ pip freeze > requirements.txt
 ```
 
-# Build
+## Build
 ```bash
 # pyinstaller 설치
 # requirements.txt 통한 설치를 마쳤다면 설치되어 있습니다
@@ -50,4 +50,9 @@ $ pip install pyinstaller
 # --onfile : 단일 파일로 생성
 # --noconsole : console 창 띄우지 않도록 설정
 $ pyinstaller --onefile --noconsole --icon=icon.ico run.py
+```
+
+## Git
+```
+git config commit.template .github/GIT_COMMIT_TEMPLATE
 ```
