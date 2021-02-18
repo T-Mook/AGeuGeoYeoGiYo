@@ -179,6 +179,7 @@ class App(QWidget):
                 'Daum Total News',
                 'Google Total News',
                 'Naver VIEW',
+                'Daum Blog'
             ] # Each sheet names
         
         make_excel.dataframe_to_excelfile_multisheets(

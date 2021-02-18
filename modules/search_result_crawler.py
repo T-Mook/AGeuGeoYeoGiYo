@@ -24,15 +24,14 @@ class search_result_crawler:
         result_list_daum = self.crawler_daum_total_news()
         result_list_google = self.crawler_google_total_news()
         result_list_naver_view = self.crawler_naver_view()
-
-        print(result_list_google)
-        print(result_list_naver_view)
+        result_list_daum_blog = self.crawler_daum_blog()
 
         self.result = [
             result_list_naver,
             result_list_daum,
             result_list_google,
-            result_list_naver_view
+            result_list_naver_view,
+            result_list_daum_blog
         ]
 
         if confirm:
@@ -267,6 +266,42 @@ class search_result_crawler:
             soup= soup, selectors= selectors, target_type= 'url_naver_view')
             
         return result_of_page
+
+    def crawler_daum_blog(self):
+
+        ### Settings ==================================================
+        # Selector (기준 2021.2.18) ================================
+        selectors = {
+            'total': 'div.wrap_cont', # News Info Total CSS Selector # ZINbbc xpd O9g5cc uUPGi
+            'title': 'div > div.wrap_tit.mg_tit > a', # News Title CSS Selector
+            'provider': 'div > div.info.clear > span.f_l > a.f_nb', # News Provider CSS Selector
+            'url': 'div > div.wrap_tit.mg_tit > a[href]',
+            'summary': 'div > p' # News Content Summary CSS Selector
+        }
+
+        ### DAUM Blog 페이지 관리 Query (2021.2.18)
+        # page=number 로 관리됩니다. 1 page, 2 page 식입니다.
+        # 따라서 1을 출발로 1의 자리 숫자만 값을 올려가면서 페이지를 바꿀 수 있다
+        # e.g https://search.daum.net/search?w=blog&DA=PGD&enc=utf8&q=%ED%8E%98%EC%9D%B4%EC%BD%94%EC%9D%B8&page=1
+
+        result_list = []
+        page_tens_digit = 1
+        while page_tens_digit < (self.pages + 1):
+            start_number = page_tens_digit
+            url_daum_blog = 'https://search.daum.net/search?w=blog&DA=PGD&enc=utf8&q=' + \
+                str(self.search_keyword) + \
+                '&page=' + str(start_number)
+            
+            ### Crawling =========================================
+            soup = self.soup(target_url= url_daum_blog)
+            result_of_page = self.crawling_with_selectors(
+                soup= soup, selectors= selectors, target_type= 'daum_blog')
+            
+            result_list = result_list + result_of_page
+
+            page_tens_digit += 1
+
+        return result_list
 
 
 if __name__ == '__main__':
