@@ -1,5 +1,5 @@
 # 아그거여기요(AGeuGeoYeoGiYo)
-* 버전 : `v.0.0.0`
+* 버전 : `v.0.1.0`
 * 목표 : 다중 플랫폼 뉴스 크롤러를 누구나 쉽게 경험하게 만듭니다.
 * Who's TMook ([링크](https://t-mook.github.io/))
 
@@ -20,6 +20,12 @@
    * _**버튼 아래 주의사항(붉은 글씨와 그 아래)을 반드시 숙지해주세요!**_
 6. `AGeuGeoYeoGiYo_TMook~.exe` 파일이 있는 현재 폴더에 검색결과가 `.excel` 파일로 저장됩니다.
    * 파일명은 `keyword_search_results_검색어_시간` 형태입니다.
+
+## 1-3. 크롤링 대상
+1. 네이버 뉴스
+2. 다음 뉴스
+3. 구글 뉴스
+4. 네이버 VIEW (구 블로그)
 
 # 2. 개발
 ## 2-1. 실행
@@ -57,3 +63,9 @@ $ pyinstaller --onefile --noconsole --icon=icon.ico run.py
 ```
 git config commit.template .github/GIT_COMMIT_TEMPLATE
 ```
+
+# 3. 업데이트 내역
+* v 0.1.0 - 네이버 VIEW, 다음 블로그 크롤링 추가
+  * 네이버 VIEW는 약 30여개가 고정적 크롤링 (페이지 수에 영향받지 않음)
+    * 페이지 형태로 이루어져 있지 않기 때문입니다
+* v 0.0.0 - 네이버, 다음, 구글 뉴스 크롤링 및 excel 파일 저장 실행기

@@ -18,6 +18,34 @@ class search_result_crawler:
         self.pages = pages # End page number
         print('[ Initialization  ] search_keyword : ', self.search_keyword)
 
+    def run_all(self, confirm= False):
+
+        result_list_naver = self.crawler_naver_total_news()
+        result_list_daum = self.crawler_daum_total_news()
+        result_list_google = self.crawler_google_total_news()
+        result_list_naver_view = self.crawler_naver_view()
+        result_list_daum_blog = self.crawler_daum_blog()
+
+        self.result = [
+            result_list_naver,
+            result_list_daum,
+            result_list_google,
+            result_list_naver_view,
+            result_list_daum_blog
+        ]
+
+        if confirm:
+            print('=== [ Complete: run_all ] ' + ('=' * 50))
+            print('Search Keyword: ' + self.search_keyword)
+            print('= [ Naver Total News ] ' + ('=' * 50))
+            print(result_list_naver[:6])
+            print('= [ Daum Total News ] ' + ('=' * 50))
+            print(result_list_daum[:6])
+            print('= [ Google Total News ] ' + ('=' * 50))
+            print(result_list_google[:6])
+            print('= [ Google Total News ] ' + ('=' * 50))
+            print(result_list_naver_view[:6])
+
     def soup(self, target_url, parser='html.parser'):
         url = target_url
         response = requests.get(url)
@@ -71,9 +99,13 @@ class search_result_crawler:
             if result_news_title != None:
                 # Classify : Title, Provider, Summary 
                 result_news_title = result_news_title.get_text()
-                result_news_provider = self.select_specific_prases(soup= value, selector= selectors['provider']).get_text()
                 result_news_summary = self.select_specific_prases(soup= value, selector= selectors['summary']).get_text()
                 result_news_url = self.select_specific_prases(soup= value, selector= selectors['url'])
+                try:
+                    # 네이버 VIEW의 경우 파워 광고는 provider가 별도 표시됩니다. 이는 제외합니다. (2021.2.18 기준)
+                    result_news_provider = self.select_specific_prases(soup= value, selector= selectors['provider']).get_text()
+                except:
+                    continue
 
                 # Trim URL
                 result_news_url = self.url_extractor_from_atag(atag= result_news_url)
@@ -209,27 +241,67 @@ class search_result_crawler:
 
         return result_list
 
-    def run_all(self, confirm= False):
 
-        result_list_naver = self.crawler_naver_total_news()
-        result_list_daum = self.crawler_daum_total_news()
-        result_list_google = self.crawler_google_total_news()
+    def crawler_naver_view(self):
 
-        self.result = [
-            result_list_naver,
-            result_list_daum,
-            result_list_google
-        ]
+        ### Settings ==================================================
+        # Selector (기준 2021.2.18) ================================
+        selectors = {
+            'total': 'div.total_wrap.api_ani_send', # News Info Total CSS Selector # ZINbbc xpd O9g5cc uUPGi
+            'title': 'a.api_txt_lines.total_tit', # News Title CSS Selector
+            'provider': 'div.total_sub > span > span > span.elss.etc_dsc_inner', # News Provider CSS Selector
+            'url': 'div.total_sub > span > span > span.elss.etc_dsc_inner > a[href]',
+            'summary': 'div.total_group > div > a > div' # News Content Summary CSS Selector
+        }
 
-        if confirm:
-            print('=== [ Complete: run_all ] ' + ('=' * 50))
-            print('Search Keyword: ' + self.search_keyword)
-            print('= [ Naver Total News ] ' + ('=' * 50))
-            print(result_list_naver[:6])
-            print('= [ Daum Total News ] ' + ('=' * 50))
-            print(result_list_daum[:6])
-            print('= [ Google Total News ] ' + ('=' * 50))
-            print(result_list_google[:6])
+        ### Naver view 페이지 관리 Query (2021.1.27)
+        # 무한 스크롤 방식입니다
+
+        url_naver_view = 'https://search.naver.com/search.naver?where=view&query=' + \
+                            str(self.search_keyword)
+        
+        ### Crawling =========================================
+        soup = self.soup(target_url= url_naver_view)
+        result_of_page = self.crawling_with_selectors(
+            soup= soup, selectors= selectors, target_type= 'url_naver_view')
+            
+        return result_of_page
+
+    def crawler_daum_blog(self):
+
+        ### Settings ==================================================
+        # Selector (기준 2021.2.18) ================================
+        selectors = {
+            'total': 'div.wrap_cont', # News Info Total CSS Selector # ZINbbc xpd O9g5cc uUPGi
+            'title': 'div > div.wrap_tit.mg_tit > a', # News Title CSS Selector
+            'provider': 'div > div.info.clear > span.f_l > a.f_nb', # News Provider CSS Selector
+            'url': 'div > div.wrap_tit.mg_tit > a[href]',
+            'summary': 'div > p' # News Content Summary CSS Selector
+        }
+
+        ### DAUM Blog 페이지 관리 Query (2021.2.18)
+        # page=number 로 관리됩니다. 1 page, 2 page 식입니다.
+        # 따라서 1을 출발로 1의 자리 숫자만 값을 올려가면서 페이지를 바꿀 수 있다
+        # e.g https://search.daum.net/search?w=blog&DA=PGD&enc=utf8&q=%ED%8E%98%EC%9D%B4%EC%BD%94%EC%9D%B8&page=1
+
+        result_list = []
+        page_tens_digit = 1
+        while page_tens_digit < (self.pages + 1):
+            start_number = page_tens_digit
+            url_daum_blog = 'https://search.daum.net/search?w=blog&DA=PGD&enc=utf8&q=' + \
+                str(self.search_keyword) + \
+                '&page=' + str(start_number)
+            
+            ### Crawling =========================================
+            soup = self.soup(target_url= url_daum_blog)
+            result_of_page = self.crawling_with_selectors(
+                soup= soup, selectors= selectors, target_type= 'daum_blog')
+            
+            result_list = result_list + result_of_page
+
+            page_tens_digit += 1
+
+        return result_list
 
 
 if __name__ == '__main__':
