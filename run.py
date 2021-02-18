@@ -175,7 +175,10 @@ class App(QWidget):
         make_excel = excel() # init
         df_list = make_excel.lists_to_dataframes_list(target_lists= result)
         sheet_names_list = [
-                'Naver Total News', 'Daum Total News', 'Google Total News'
+                'Naver Total News',
+                'Daum Total News',
+                'Google Total News',
+                'Naver VIEW',
             ] # Each sheet names
         
         make_excel.dataframe_to_excelfile_multisheets(

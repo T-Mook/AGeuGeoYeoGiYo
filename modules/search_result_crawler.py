@@ -18,6 +18,35 @@ class search_result_crawler:
         self.pages = pages # End page number
         print('[ Initialization  ] search_keyword : ', self.search_keyword)
 
+    def run_all(self, confirm= False):
+
+        result_list_naver = self.crawler_naver_total_news()
+        result_list_daum = self.crawler_daum_total_news()
+        result_list_google = self.crawler_google_total_news()
+        result_list_naver_view = self.crawler_naver_view()
+
+        print(result_list_google)
+        print(result_list_naver_view)
+
+        self.result = [
+            result_list_naver,
+            result_list_daum,
+            result_list_google,
+            result_list_naver_view
+        ]
+
+        if confirm:
+            print('=== [ Complete: run_all ] ' + ('=' * 50))
+            print('Search Keyword: ' + self.search_keyword)
+            print('= [ Naver Total News ] ' + ('=' * 50))
+            print(result_list_naver[:6])
+            print('= [ Daum Total News ] ' + ('=' * 50))
+            print(result_list_daum[:6])
+            print('= [ Google Total News ] ' + ('=' * 50))
+            print(result_list_google[:6])
+            print('= [ Google Total News ] ' + ('=' * 50))
+            print(result_list_naver_view[:6])
+
     def soup(self, target_url, parser='html.parser'):
         url = target_url
         response = requests.get(url)
@@ -71,9 +100,13 @@ class search_result_crawler:
             if result_news_title != None:
                 # Classify : Title, Provider, Summary 
                 result_news_title = result_news_title.get_text()
-                result_news_provider = self.select_specific_prases(soup= value, selector= selectors['provider']).get_text()
                 result_news_summary = self.select_specific_prases(soup= value, selector= selectors['summary']).get_text()
                 result_news_url = self.select_specific_prases(soup= value, selector= selectors['url'])
+                try:
+                    # 네이버 VIEW의 경우 파워 광고는 provider가 별도 표시됩니다. 이는 제외합니다. (2021.2.18 기준)
+                    result_news_provider = self.select_specific_prases(soup= value, selector= selectors['provider']).get_text()
+                except:
+                    continue
 
                 # Trim URL
                 result_news_url = self.url_extractor_from_atag(atag= result_news_url)
@@ -209,27 +242,31 @@ class search_result_crawler:
 
         return result_list
 
-    def run_all(self, confirm= False):
 
-        result_list_naver = self.crawler_naver_total_news()
-        result_list_daum = self.crawler_daum_total_news()
-        result_list_google = self.crawler_google_total_news()
+    def crawler_naver_view(self):
 
-        self.result = [
-            result_list_naver,
-            result_list_daum,
-            result_list_google
-        ]
+        ### Settings ==================================================
+        # Selector (기준 2021.2.18) ================================
+        selectors = {
+            'total': 'div.total_wrap.api_ani_send', # News Info Total CSS Selector # ZINbbc xpd O9g5cc uUPGi
+            'title': 'a.api_txt_lines.total_tit', # News Title CSS Selector
+            'provider': 'div.total_sub > span > span > span.elss.etc_dsc_inner', # News Provider CSS Selector
+            'url': 'div.total_sub > span > span > span.elss.etc_dsc_inner > a[href]',
+            'summary': 'div.total_group > div > a > div' # News Content Summary CSS Selector
+        }
 
-        if confirm:
-            print('=== [ Complete: run_all ] ' + ('=' * 50))
-            print('Search Keyword: ' + self.search_keyword)
-            print('= [ Naver Total News ] ' + ('=' * 50))
-            print(result_list_naver[:6])
-            print('= [ Daum Total News ] ' + ('=' * 50))
-            print(result_list_daum[:6])
-            print('= [ Google Total News ] ' + ('=' * 50))
-            print(result_list_google[:6])
+        ### Naver view 페이지 관리 Query (2021.1.27)
+        # 무한 스크롤 방식입니다
+
+        url_naver_view = 'https://search.naver.com/search.naver?where=view&query=' + \
+                            str(self.search_keyword)
+        
+        ### Crawling =========================================
+        soup = self.soup(target_url= url_naver_view)
+        result_of_page = self.crawling_with_selectors(
+            soup= soup, selectors= selectors, target_type= 'url_naver_view')
+            
+        return result_of_page
 
 
 if __name__ == '__main__':
